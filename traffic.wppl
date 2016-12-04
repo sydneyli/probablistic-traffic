@@ -1,4 +1,5 @@
 // STATE
+// esversion: 6
 // car-loc
 // car-speed
 // time
@@ -10,8 +11,8 @@ var printState = function(state) {
   console.log("Speed:" + state.speed);
   console.log("Time:" + state.time);
   console.log("Car Cross Time:" + state.carCrossTime);
-  console.log("Ped Cross Time:" + state.pedCrossTime)
-}
+  console.log("Ped Cross Time:" + state.pedCrossTime);
+};
 
 var movePrior =  function(state, player) {
   if (player === "car") {
@@ -35,8 +36,8 @@ var pedPrior = function(state){
 };
 
 var validCarMove = function(state, action) {
-  return !(state.speed == 0 && action == -1);
-}
+  return !(state.speed === 0 && action == -1);
+};
 
 var carPrior = function(state){
   return Infer({ model() {
@@ -115,7 +116,7 @@ var act = function(state, player, depth) {
     var eu = expectation(Infer({method: "enumerate", maxExecutions: 4, model() {
       var new_state = _.clone(state);
       var new_speed = old_speed + randomInteger(3) - 1;
-      Object.defineProperty(new_state, 'speed', {value: new_speed < 0 ? old_speed : new_speed})
+      Object.defineProperty(new_state, 'speed', {value: new_speed < 0 ? old_speed : new_speed});
       var outcome = simulate(new_state, move, player, depth - 1);
       return utility(outcome, player);
     }}));
@@ -142,6 +143,6 @@ var crashState = {
   time: 5,
   carCrossTime: -1,
   pedCrossTime: -1
-}
+};
 
 viz.table(act(crashState, "ped", 3));
