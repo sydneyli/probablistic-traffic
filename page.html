@@ -11,12 +11,26 @@
         <link rel="stylesheet" href="http://cdn.webppl.org/webppl-viz-0.7.10.css">
 
     </head>
+    <button class="showCode"> edit code! </button>
+    <button class="hideCode"> hide code! </button>
     <pre><code>
         CODEHERE 
     </code></pre>
     <script>
         var preEls = $("pre").map(function(i, el) { wpEditor.setup(el, {language: 'webppl'}); });          
+        setTimeout(function () {
+                $(".ReactCodeMirror").css('display', 'none');
+                $('.run').click();}
+            , 100);
+            $(".hideCode").css('display', 'none');
+            $(".showCode").click(function () {
+                $(".ReactCodeMirror").css('display', 'block');
+                $(".hideCode").css('display', 'block');
+                $(".showCode").css('display', 'none'); })
+            $(".hideCode").click(function () {
+                $(".ReactCodeMirror").css('display', 'none');
+                $(".showCode").css('display', 'block');
+                $(".hideCode").css('display', 'none'); })
     </script>
     <script src="webppl.min.js" defer></script>
-
 </html>
