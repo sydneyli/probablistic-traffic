@@ -1,0 +1,2 @@
+var crashState = makeState(4, 3);
+analyzeState(crashState);

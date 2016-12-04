@@ -1,18 +1,22 @@
 // STATE
-// esversion: 6
 // car-loc
 // car-speed
 // time
 // carCrossTime
 // pedCrossTime
 
-var printState = function(state) {
-  console.log("Loc:" + state.carLocation);
-  console.log("Speed:" + state.speed);
-  console.log("Time:" + state.time);
-  console.log("Car Cross Time:" + state.carCrossTime);
-  console.log("Ped Cross Time:" + state.pedCrossTime);
-};
+const pedCrossReward = 50;
+const carCrossReward = 50;
+const carTimeCost = 1;
+const pedTimeCost = 1;
+const carCrashReward = -100;
+const pedCrashReward = -1000;
+
+const speedUncertainty = 1;
+
+const defaultDepth = 3;
+const actExecutions = 10;
+const simulateExecutions = 4;
 
 var movePrior =  function(state, player) {
   if (player === "car") {
@@ -35,13 +39,13 @@ var pedPrior = function(state){
   }});
 };
 
-var validCarMove = function(state, action) {
-  return !(state.speed === 0 && action == -1);
+var validCarMove = function(state, move) {
+  return !(state.speed === 0 && move == -1);
 };
 
 var carPrior = function(state){
   return Infer({ model() {
-     var move = randomInteger(3) - 1;
+    var move = randomInteger(3) - 1;
     condition(validCarMove(state, move));
     return move;
   }});
@@ -56,7 +60,7 @@ var transition = function(state, move, player) {
       speed: state.speed + move,
       carCrossTime: (loc <= 0 && state.carCrossTime == -1) ? old_time : state.carCrossTime,
       pedCrossTime: state.pedCrossTime,
-      time: state.time + 1
+      time: state.time + 1,
     };
   } else {
     return {
@@ -64,7 +68,7 @@ var transition = function(state, move, player) {
       speed: state.speed,
       carCrossTime: state.carCrossTime,
       pedCrossTime: (move === "cross") ? state.time : state.pedCrossTime,
-      time: state.time
+      time: state.time,
     };
   }
 };
@@ -74,29 +78,29 @@ var crashed = function(state) {
 };
 
 var carReward = function(state) {
-  return -state.carCrossTime + 50;
+  return carCrossReward-(carTimeCost*state.carCrossTime);
 };
 
 var pedReward = function(state) {
-  return -state.pedCrossTime + 50;
+  return pedCrossReward-(pedTimeCost*state.pedCrossTime);
 };
 
 var utility = function(state, player) {
   if (player == "car") {
     if (crashed(state)) {
-      return -100;
+      return carCrashReward;
     } else if (state.carCrossTime != -1) {
       return carReward(state);
     } else {
-      return -1;
+      return 0;
     }
   } else {
     if (crashed(state)) {
-      return -1000;
+      return pedCrashReward;
     } else if (state.pedCrossTime != -1) {
       return pedReward(state);
     } else {
-      return -1;
+      return 0;
     }
   }
 };
@@ -109,15 +113,21 @@ var otherPlayer = function(player) {
   return (player === "car" ? "ped" : "car");
 };
 
+var randomizeSpeed = function(state) {
+  var oldSpeed = state.speed;
+  var newState = _.clone(state);
+  var newSpeed = oldSpeed + randomInteger(1 + 2*speedUncertainty) - speedUncertainty;
+  Object.defineProperty(newState, 'speed', {value: newSpeed < 0 ? oldSpeed : newSpeed});
+  return newState;
+};
+
+
 var act = function(state, player, depth) {
-  return Infer({method: "enumerate", maxExecutions: 10, model() {
+  return Infer({method: "enumerate", maxExecutions: actExecutions, model() {
     var move = sample(movePrior(state, player));
-    var old_speed = state.speed;
-    var eu = expectation(Infer({method: "enumerate", maxExecutions: 4, model() {
-      var new_state = _.clone(state);
-      var new_speed = old_speed + randomInteger(3) - 1;
-      Object.defineProperty(new_state, 'speed', {value: new_speed < 0 ? old_speed : new_speed});
-      var outcome = simulate(new_state, move, player, depth - 1);
+    var eu = expectation(Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
+      var newState = randomizeSpeed(state);
+      var outcome = simulate(newState, move, player, depth - 1);
       return utility(outcome, player);
     }}));
     factor(eu);
@@ -125,24 +135,13 @@ var act = function(state, player, depth) {
   }});
   };
 
-var simulate = function(state, action, player, depth) {
-  var nextState = transition(state, action, player);
+var simulate = function(state, move, player, depth) {
+  var nextState = transition(state, move, player);
   if (isTerminal(nextState) || depth <= 0) {
     return nextState;
   } else {
-
     var nextPlayer = otherPlayer(player);
     var nextAction = sample(act(nextState, nextPlayer, depth));
     return simulate(nextState, nextAction, nextPlayer, depth);
   }
 };
-
-var crashState = {
-  carLocation: 1,
-  speed: 3,
-  time: 5,
-  carCrossTime: -1,
-  pedCrossTime: -1
-};
-
-viz.table(act(crashState, "ped", 3));

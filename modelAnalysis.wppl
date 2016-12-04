@@ -1,0 +1,54 @@
+var makeState = function (carLocation, speed) {
+  return {
+    carLocation: carLocation,
+    speed: speed,
+    time: 0,
+    carCrossTime: -1,
+    pedCrossTime: -1,
+    crashed: false,
+    crossingTurns: -1
+  };
+};
+
+var printState = function(state) {
+  console.log("Loc:" + state.carLocation);
+  console.log("Speed:" + state.speed);
+  console.log("Time:" + state.time);
+  console.log("Car Cross Time:" + state.carCrossTime);
+  console.log("Ped Cross Time:" + state.pedCrossTime);
+  console.log("Crashed?:" + state.crashed);
+  console.log("Crossing turns:" + state.crossingTurns);
+};
+
+var getActionDistribution = function(state, player) {
+  print("Action Distribution for " + player + ":");
+  viz(act(state, player, defaultDepth));
+};
+
+var getOutcomeDistribution = function(state, player, move) {
+  var crashOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
+    var newState = randomizeSpeed(state);
+    var outcome = simulate(newState, move, player, defaultDepth);
+    return crashed(outcome);
+  }});
+  var utilityOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
+    var newState = randomizeSpeed(state);
+    var outcome = simulate(newState, move, player, defaultDepth);
+    return utility(outcome, player);
+  }});
+  print("Outcome Distribution for " + player + " doing " + move + ":");
+  print("Crashed?");
+  viz(crashOutcomes);
+  print("Utility:");
+  viz(utilityOutcomes);
+};
+
+var analyzeState = function(state) {
+  getActionDistribution(state, "ped");
+  getOutcomeDistribution(state, "ped", "cross");
+  getOutcomeDistribution(state, "ped", "wait");
+  getActionDistribution(state, "car");
+  getOutcomeDistribution(state, "car", -1);
+  getOutcomeDistribution(state, "car", 0);
+  getOutcomeDistribution(state, "car", 1);
+};
