@@ -1,0 +1,101 @@
+// STATE
+// car-loc
+// car-speed
+// time
+// carCrossTime
+// pedCrossTime
+// crashed
+// crossingTurns
+
+const pedCrossReward = 50;
+const carCrossReward = 50;
+const carTimeCost = 1;
+const pedTimeCost = 1;
+const carCrashReward = -100;
+const pedCrashReward = -1000;
+const maxCrossingTurns = 2;
+
+const speedUncertainty = 1;
+
+const defaultDepth = 3;
+const actExecutions = 10;
+const simulateExecutions = 4;
+
+var pedPrior = function(state){
+  return Infer({ model() {
+    if (state.pedCrossTime != -1 || state.crashed || state.crossingTurns > -1) {
+      return "wait";
+    } else {
+      if (state.carCrossTime != -1) {
+        return "cross";
+      }
+      return flip(0.5) ? "cross" : "wait";
+    }
+  }});
+};
+
+var validCarMove = function(state, move) {
+  return !(state.speed === 0 && move == -1);
+};
+
+var carPrior = function(state){
+  return Infer({ model() {
+    var move = randomInteger(3) - 1;
+    condition(validCarMove(state, move));
+    return move;
+  }});
+};
+
+var transition = function(state, move, player) {
+  var newState = _.clone(state);
+  if (player == "car") {
+    Object.defineProperty(newState, 'carLocation', {value: state.carLocation - state.speed});
+    Object.defineProperty(newState, 'speed', {value: state.speed + move});
+    Object.defineProperty(newState, 'carCrossTime', {value: (newState.carLocation <= 0 && state.carCrossTime == -1) ? state.time + 1 : state.carCrossTime});
+    Object.defineProperty(newState, 'time', {value: state.time + 1});
+    if(newState.carCrossTime === newState.time && (state.crossingTurns > -1 || state.pedCrossTime == newState.time)) {
+      Object.defineProperty(newState, 'crashed', {value: true});
+    }
+  } else {
+    if (move === "cross") {
+      Object.defineProperty(newState, 'crossingTurns', {value: maxCrossingTurns});
+    } else if (state.crossingTurns > 0) {
+      Object.defineProperty(newState, 'crossingTurns', {value: state.crossingTurns - 1});
+    } else if (state.crossingTurns === 0) {
+      Object.defineProperty(newState, 'crossingTurns', {value: -1});
+      Object.defineProperty(newState, 'pedCrossTime', {value: state.time});
+    }
+  }
+  return newState;
+};
+
+var crashed = function(state) {
+  return state.crashed; //(state.carCrossTime != -1 && ((state.carCrossTime === state.pedCrossTime) || (state.carCrossTime === state.time && state.crossingTurns > -1)));
+};
+
+var carReward = function(state) {
+  return carCrossReward-(carTimeCost*state.carCrossTime);
+};
+
+var pedReward = function(state) {
+  return pedCrossReward-(pedTimeCost*state.pedCrossTime);
+};
+
+var isTerminal = function(state) {
+  return (crashed(state) || (state.pedCrossTime != -1 && state.carCrossTime != -1));
+};
+
+var guessCarState = function(state) {
+  /*
+  var oldSpeed = state.speed;
+  var newState = _.clone(state);
+  var newSpeed = oldSpeed + randomInteger(1 + 2*speedUncertainty) - speedUncertainty;
+  Object.defineProperty(newState, 'speed', {value: newSpeed < 0 ? oldSpeed : newSpeed});
+  return newState;
+  */
+  return state;
+};
+
+var guessPedState = function(state) {
+  return state;
+};

@@ -34,11 +34,21 @@ var getOutcomeDistribution = function(state, player, move) {
     var outcome = getNewOutcome(state, move, player, defaultDepth);
     return utility(outcome, player);
   }});
+  var crossOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
+    var outcome = getNewOutcome(state, move, player, defaultDepth);
+    if (player === "car") {
+      return outcome.carCrossTime;
+    } else {
+      return outcome.pedCrossTime;
+    }
+  }});
   print("Outcome Distribution for " + player + " doing " + move + ":");
   print("Crashed?");
   viz(crashOutcomes);
   print("Utility:");
   viz(utilityOutcomes);
+  print("When " + player + " crossed:");
+  viz(crossOutcomes);
 };
 
 var analyzeState = function(state) {

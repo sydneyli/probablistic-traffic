@@ -1,2 +1,3 @@
-var crashState = makeState(4, 3);
-analyzeState(crashState);
+var carStopState = makeState(8, 3); // The car is far enough that ped starts to cross, car thus has to slow down
+var pedWaitState = makeState(6, 3); // The car is close enough that it will decide to speed up and the pedestrian will wait for the car
+analyzeState(pedWaitState);
