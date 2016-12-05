@@ -6,7 +6,7 @@ var makeState = function (carLocation, speed) {
     carCrossTime: -1,
     pedCrossTime: -1,
     crashedTime: -1,
-    crossingTurns: -1
+    crossingTurns: -1,
   };
 };
 
