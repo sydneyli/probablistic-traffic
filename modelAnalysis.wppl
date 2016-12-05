@@ -5,19 +5,28 @@ var makeState = function (carLocation, speed) {
     time: 0,
     carCrossTime: -1,
     pedCrossTime: -1,
-    crashed: false,
+    crashedTime: -1,
     crossingTurns: -1
   };
 };
 
 var printState = function(state) {
-  console.log("Loc:" + state.carLocation);
-  console.log("Speed:" + state.speed);
-  console.log("Time:" + state.time);
-  console.log("Car Cross Time:" + state.carCrossTime);
-  console.log("Ped Cross Time:" + state.pedCrossTime);
-  console.log("Crashed?:" + state.crashed);
-  console.log("Crossing turns:" + state.crossingTurns);
+  console.log("-------------------\n" +
+  "STATE " + state.time + "\n" +
+  "Loc:" + state.carLocation + "\n" +
+  "Speed:" + state.speed + "\n");
+  if(state.carCrossTime === state.time) {
+    console.log("Car crossed");
+  }
+  if(state.pedCrossTime === state.time) {
+    console.log("Pedestrian finished crossing");
+  }
+  if(state.crashedTime === state.time) {
+    console.log("CRASH!");
+  }
+  if(state.crossingTurns !== -1) {
+    console.log("PED CROSSING, " + state.crossingTurns + " turns left.");
+  }
 };
 
 var getActionDistribution = function(state, player) {
@@ -28,27 +37,29 @@ var getActionDistribution = function(state, player) {
 var getOutcomeDistribution = function(state, player, move) {
   var crashOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
     var outcome = getNewOutcome(state, move, player, defaultDepth);
-    return crashed(outcome);
+    return outcome.crashedTime;
   }});
   var utilityOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
     var outcome = getNewOutcome(state, move, player, defaultDepth);
     return utility(outcome, player);
   }});
-  var crossOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
+  var carCrossOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
     var outcome = getNewOutcome(state, move, player, defaultDepth);
-    if (player === "car") {
-      return outcome.carCrossTime;
-    } else {
-      return outcome.pedCrossTime;
-    }
+    return outcome.carCrossTime;
+  }});
+  var pedCrossOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
+    var outcome = getNewOutcome(state, move, player, defaultDepth);
+    return outcome.pedCrossTime;
   }});
   print("Outcome Distribution for " + player + " doing " + move + ":");
   print("Crashed?");
   viz(crashOutcomes);
   print("Utility:");
   viz(utilityOutcomes);
-  print("When " + player + " crossed:");
-  viz(crossOutcomes);
+  print("When car crossed:");
+  viz(carCrossOutcomes);
+  print("When pedestrian crossed:");
+  viz(pedCrossOutcomes);
 };
 
 var analyzeState = function(state) {
@@ -59,4 +70,24 @@ var analyzeState = function(state) {
   getOutcomeDistribution(state, "car", -1);
   getOutcomeDistribution(state, "car", 0);
   getOutcomeDistribution(state, "car", 1);
+};
+
+/*
+ * WHY DO I HAVE TO DO THIS??
+ * WHY DOESN'T FOREACH WORK ON THIS ARRAY?
+ * WHAT IS LIFE?
+ * I HATE JAVASCRIPT...
+ */
+var printAllStates = function(states, idx) {
+  printState(states[idx]);
+  if(idx < states.length-1) {
+    printAllStates(states, idx+1);
+  }
+};
+
+var simulateFromState = function(state, player) {
+  var states = [];
+  realSimulate(state, player, states);
+  print("If " + player + " starts first:");
+  printAllStates(states, 0);
 };

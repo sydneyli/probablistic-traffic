@@ -45,25 +45,35 @@ var act = function(state, player, depth) {
       var outcome = getNewOutcome(state, move, player, depth);
       return utility(outcome, player);
     }}));
-    factor(eu);
+    factor(10*eu);
     return move;
   }});
 };
 
 var getNewOutcome = function(state, move, player, depth) {
   var newState = guessState(state, player);
-  var outcome = simulate(newState, move, player, depth - 1);
+  var outcome = mentalSimulate(newState, move, player, depth - 1);
   return outcome;
 };
 
 
-var simulate = function(state, move, player, depth) {
+var mentalSimulate = function(state, move, player, depth) {
   var nextState = transition(state, move, player);
   if (isTerminal(nextState) || depth <= 0) {
     return nextState;
   } else {
     var nextPlayer = otherPlayer(player);
     var nextAction = sample(act(nextState, nextPlayer, depth));
-    return simulate(nextState, nextAction, nextPlayer, depth);
+    return mentalSimulate(nextState, nextAction, nextPlayer, depth);
+  }
+};
+
+var realSimulate = function(state, player, states) {
+  states.push(state);
+  if (!isTerminal(state)) {
+    var move = sample(act(state, player, defaultDepth));
+    var newState = transition(state, move, player);
+    var newPlayer = otherPlayer(player);
+    realSimulate(newState, newPlayer, states);
   }
 };
