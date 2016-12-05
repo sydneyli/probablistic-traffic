@@ -12,4 +12,4 @@ model:
 	sed -e '/CODEHERE/ {' -e 'r compiled.wppl' -e 'd' -e '}' page.html > index.html
 	rm compiled.wppl
 clean:
-	rm index.htmlj
+	rm index.html
