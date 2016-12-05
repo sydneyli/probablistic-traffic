@@ -18,14 +18,6 @@ const defaultDepth = 3;
 const actExecutions = 10;
 const simulateExecutions = 4;
 
-var movePrior =  function(state, player) {
-  if (player === "car") {
-    return carPrior(state);
-  } else {
-    return pedPrior(state);
-  }
-};
-
 var pedPrior = function(state){
   return Infer({ model() {
     if (state.pedCrossTime != -1) {
@@ -85,35 +77,15 @@ var pedReward = function(state) {
   return pedCrossReward-(pedTimeCost*state.pedCrossTime);
 };
 
-var utility = function(state, player) {
-  if (player == "car") {
-    if (crashed(state)) {
-      return carCrashReward;
-    } else if (state.carCrossTime != -1) {
-      return carReward(state);
-    } else {
-      return 0;
-    }
-  } else {
-    if (crashed(state)) {
-      return pedCrashReward;
-    } else if (state.pedCrossTime != -1) {
-      return pedReward(state);
-    } else {
-      return 0;
-    }
-  }
+var isTerminal = function(state) {
+  return (crashed(state) || (state.pedCrossTime != -1 && state.carCrossTime != -1));
 };
 
 var isTerminal = function(state) {
   return (crashed(state) || (state.pedCrossTime != -1 && state.carCrossTime != -1));
 };
 
-var otherPlayer = function(player) {
-  return (player === "car" ? "ped" : "car");
-};
-
-var randomizeSpeed = function(state) {
+var guessCarState = function(state) {
   var oldSpeed = state.speed;
   var newState = _.clone(state);
   var newSpeed = oldSpeed + randomInteger(1 + 2*speedUncertainty) - speedUncertainty;
@@ -121,27 +93,6 @@ var randomizeSpeed = function(state) {
   return newState;
 };
 
-
-var act = function(state, player, depth) {
-  return Infer({method: "enumerate", maxExecutions: actExecutions, model() {
-    var move = sample(movePrior(state, player));
-    var eu = expectation(Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
-      var newState = randomizeSpeed(state);
-      var outcome = simulate(newState, move, player, depth - 1);
-      return utility(outcome, player);
-    }}));
-    factor(eu);
-    return move;
-  }});
-  };
-
-var simulate = function(state, move, player, depth) {
-  var nextState = transition(state, move, player);
-  if (isTerminal(nextState) || depth <= 0) {
-    return nextState;
-  } else {
-    var nextPlayer = otherPlayer(player);
-    var nextAction = sample(act(nextState, nextPlayer, depth));
-    return simulate(nextState, nextAction, nextPlayer, depth);
-  }
+var guessPedState = function(state) {
+  return state;
 };

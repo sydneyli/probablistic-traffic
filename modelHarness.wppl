@@ -1,0 +1,69 @@
+var otherPlayer = function(player) {
+  return (player === "car" ? "ped" : "car");
+};
+
+var movePrior =  function(state, player) {
+  if (player === "car") {
+    return carPrior(state);
+  } else {
+    return pedPrior(state);
+  }
+};
+
+var utility = function(state, player) {
+  if (player == "car") {
+    if (crashed(state)) {
+      return carCrashReward;
+    } else if (state.carCrossTime != -1) {
+      return carReward(state);
+    } else {
+      return 0;
+    }
+  } else {
+    if (crashed(state)) {
+      return pedCrashReward;
+    } else if (state.pedCrossTime != -1) {
+      return pedReward(state);
+    } else {
+      return 0;
+    }
+  }
+};
+
+var guessState = function(state, player) {
+  if (player === "car") {
+    return guessPedState(state);
+  } else {
+    return guessCarState(state);
+  }
+};
+
+var act = function(state, player, depth) {
+  return Infer({method: "enumerate", maxExecutions: actExecutions, model() {
+    var move = sample(movePrior(state, player));
+    var eu = expectation(Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
+      var outcome = getNewOutcome(state, move, player, depth);
+      return utility(outcome, player);
+    }}));
+    factor(eu);
+    return move;
+  }});
+};
+
+var getNewOutcome = function(state, move, player, depth) {
+  var newState = guessState(state, player);
+  var outcome = simulate(newState, move, player, depth - 1);
+  return outcome;
+};
+
+
+var simulate = function(state, move, player, depth) {
+  var nextState = transition(state, move, player);
+  if (isTerminal(nextState) || depth <= 0) {
+    return nextState;
+  } else {
+    var nextPlayer = otherPlayer(player);
+    var nextAction = sample(act(nextState, nextPlayer, depth));
+    return simulate(nextState, nextAction, nextPlayer, depth);
+  }
+};

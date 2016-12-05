@@ -6,6 +6,7 @@ long_build:
 standard_build:
 	cp traffic.wppl compiled.wppl
 model:
+	cat modelHarness.wppl >> compiled.wppl
 	cat modelAnalysis.wppl >> compiled.wppl
 	cat commands.wppl >> compiled.wppl
 	sed -e '/CODEHERE/ {' -e 'r compiled.wppl' -e 'd' -e '}' page.html > index.html

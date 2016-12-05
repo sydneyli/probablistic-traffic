@@ -27,13 +27,11 @@ var getActionDistribution = function(state, player) {
 
 var getOutcomeDistribution = function(state, player, move) {
   var crashOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
-    var newState = randomizeSpeed(state);
-    var outcome = simulate(newState, move, player, defaultDepth);
+    var outcome = getNewOutcome(state, move, player, defaultDepth);
     return crashed(outcome);
   }});
   var utilityOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
-    var newState = randomizeSpeed(state);
-    var outcome = simulate(newState, move, player, defaultDepth);
+    var outcome = getNewOutcome(state, move, player, defaultDepth);
     return utility(outcome, player);
   }});
   print("Outcome Distribution for " + player + " doing " + move + ":");
