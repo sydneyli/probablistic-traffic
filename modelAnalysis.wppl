@@ -11,13 +11,22 @@ var makeState = function (carLocation, speed) {
 };
 
 var printState = function(state) {
-  console.log("Loc:" + state.carLocation);
-  console.log("Speed:" + state.speed);
-  console.log("Time:" + state.time);
-  console.log("Car Cross Time:" + state.carCrossTime);
-  console.log("Ped Cross Time:" + state.pedCrossTime);
-  console.log("Crashed Time:" + state.crashedTime);
-  console.log("Crossing turns:" + state.crossingTurns);
+  console.log("-------------------\n" +
+  "STATE " + state.time + "\n" +
+  "Loc:" + state.carLocation + "\n" +
+  "Speed:" + state.speed + "\n");
+  if(state.carCrossTime === state.time) {
+    console.log("Car crossed");
+  }
+  if(state.pedCrossTime === state.time) {
+    console.log("Pedestrian finished crossing");
+  }
+  if(state.crashedTime === state.time) {
+    console.log("CRASH!");
+  }
+  if(state.crossingTurns !== -1) {
+    console.log("PED CROSSING, " + state.crossingTurns + " turns left.");
+  }
 };
 
 var getActionDistribution = function(state, player) {
@@ -61,4 +70,24 @@ var analyzeState = function(state) {
   getOutcomeDistribution(state, "car", -1);
   getOutcomeDistribution(state, "car", 0);
   getOutcomeDistribution(state, "car", 1);
+};
+
+/*
+ * WHY DO I HAVE TO DO THIS??
+ * WHY DOESN'T FOREACH WORK ON THIS ARRAY?
+ * WHAT IS LIFE?
+ * I HATE JAVASCRIPT...
+ */
+var printAllStates = function(states, idx) {
+  printState(states[idx]);
+  if(idx < states.length-1) {
+    printAllStates(states, idx+1);
+  }
+};
+
+var simulateFromState = function(state, player) {
+  var states = [];
+  realSimulate(state, player, states);
+  print("If " + player + " starts first:");
+  printAllStates(states, 0);
 };

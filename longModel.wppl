@@ -13,12 +13,12 @@ const carTimeCost = 1;
 const pedTimeCost = 1;
 const carCrashReward = -100;
 const pedCrashReward = -1000;
-const maxCrossingTurns = 2;
+const maxCrossingTurns = 3;
 
 const speedUncertainty = 1;
 
 const pedCrossPrior = 0.5;
-const carPriors = [0.50, 0.50, 0];
+const carPriors = [0.33, 0.33, 0.33];
 const carMoves = [-1, 0, 1];
 
 const defaultDepth = 3;
@@ -44,7 +44,7 @@ var validCarMove = function(state, move) {
 
 var carPrior = function(state){
   return Infer({ model() {
-    var move = carMoves[discrete(carPriors)];
+    var move = sample(Categorical({ps: carPriors, vs: carMoves}));
     condition(validCarMove(state, move));
     return move;
   }});
