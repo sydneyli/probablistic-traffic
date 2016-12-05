@@ -45,7 +45,7 @@ var act = function(state, player, depth) {
       var outcome = getNewOutcome(state, move, player, depth);
       return utility(outcome, player);
     }}));
-    factor(eu);
+    factor(10*eu);
     return move;
   }});
 };

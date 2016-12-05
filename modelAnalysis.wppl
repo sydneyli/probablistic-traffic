@@ -5,7 +5,7 @@ var makeState = function (carLocation, speed) {
     time: 0,
     carCrossTime: -1,
     pedCrossTime: -1,
-    crashed: false,
+    crashedTime: -1,
     crossingTurns: -1
   };
 };
@@ -16,7 +16,7 @@ var printState = function(state) {
   console.log("Time:" + state.time);
   console.log("Car Cross Time:" + state.carCrossTime);
   console.log("Ped Cross Time:" + state.pedCrossTime);
-  console.log("Crashed?:" + state.crashed);
+  console.log("Crashed Time:" + state.crashedTime);
   console.log("Crossing turns:" + state.crossingTurns);
 };
 
@@ -28,27 +28,29 @@ var getActionDistribution = function(state, player) {
 var getOutcomeDistribution = function(state, player, move) {
   var crashOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
     var outcome = getNewOutcome(state, move, player, defaultDepth);
-    return crashed(outcome);
+    return outcome.crashedTime;
   }});
   var utilityOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
     var outcome = getNewOutcome(state, move, player, defaultDepth);
     return utility(outcome, player);
   }});
-  var crossOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
+  var carCrossOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
     var outcome = getNewOutcome(state, move, player, defaultDepth);
-    if (player === "car") {
-      return outcome.carCrossTime;
-    } else {
-      return outcome.pedCrossTime;
-    }
+    return outcome.carCrossTime;
+  }});
+  var pedCrossOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
+    var outcome = getNewOutcome(state, move, player, defaultDepth);
+    return outcome.pedCrossTime;
   }});
   print("Outcome Distribution for " + player + " doing " + move + ":");
   print("Crashed?");
   viz(crashOutcomes);
   print("Utility:");
   viz(utilityOutcomes);
-  print("When " + player + " crossed:");
-  viz(crossOutcomes);
+  print("When car crossed:");
+  viz(carCrossOutcomes);
+  print("When pedestrian crossed:");
+  viz(pedCrossOutcomes);
 };
 
 var analyzeState = function(state) {
