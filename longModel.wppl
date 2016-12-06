@@ -6,6 +6,7 @@
 // pedCrossTime
 // crashed
 // crossingTurns
+// isCarDriverless
 
 const pedCrossReward = 50;
 const carCrossReward = 50;
@@ -15,9 +16,17 @@ const carCrashReward = -100;
 const pedCrashReward = -1000;
 const maxCrossingTurns = 3;
 
-//const speedProbs = [0.1, 0.2, 0.4, 0.2, 0.1];
-const speedProbs = [0.3, 0.4, 0.3];
-const crossProbs = [0.2, 0.6, 0.2];
+// regular car
+const regularCarMissPedProb = 0.3;
+const regularCarPriors = [0.33, 0.33, 0.33];
+
+// driverless car
+const driverlessCarMissPedProb = 0.01;
+const driverlessPriors = [0.5, 0.4, 0];
+
+const missPedProb = 0;
+const missCarProb = 0.3;
+const speedProbs = [0.2, 0.3, 0.35, 0.1, 0.05];
 
 const pedCrossPrior = 0.5;
 const carPriors = [0.33, 0.33, 0.33];
@@ -91,33 +100,28 @@ var isTerminal = function(state) {
 };
 
 var guessCarState = function(state) {
-  /*
   var oldSpeed = state.speed;
   var newState = _.clone(state);
-  var totalUncertainty = speedProbs.length;
-  var uncertainty = mapN(function(x) { return oldSpeed - totalUncertainty/2 + x; }, totalUncertainty);
-  var newSpeed = oldSpeed + sample(Categorical({ps: speedProbs, vs: uncertainty}));
-  Object.defineProperty(newState, 'speed', {value: newSpeed < 0 ? 0 : newSpeed});
+  if (!flip(missCarProb)) {
+    var totalUncertainty = speedProbs.length;
+    var uncertainty = mapN(function(x) { return oldSpeed - Math.floor(totalUncertainty/2) + x; }, totalUncertainty);
+    var newSpeed = sample(Categorical({ps: speedProbs, vs: uncertainty}));
+    Object.defineProperty(newState, 'speed', {value: newSpeed < 0 ? 0 : newSpeed});
+  } else {
+    Object.defineProperty(newState, 'speed', {value: 0});
+  }
   return newState;
-  */
-  return state;
 };
 
 var guessPedState = function(state) {
-  return state;
   /*
    * The rest of this is to add uncertainty to the car's guess of how long it will take the pedestrian to finish crossing. However adding it makes the program really slow.
-
-  if (state.crossingTurns > -1) {
-    var oldCrossing = state.crossingTurns;
+   */
+  if (state.crossingTurns === maxCrossingTurns && flip(missPedProb)) {
     var newState = _.clone(state);
-    var totalUncertainty = crossProbs.length;
-    var uncertainty = mapN(function(x) { return oldCrossing - totalUncertainty/2 + x; }, totalUncertainty);
-    var newCrossing = oldCrossing + sample(Categorical({ps: crossProbs, vs: uncertainty}));
-    Object.defineProperty(newState, 'crossingTurns', {value: newCrossing < 0 ? 0 : newCrossing});
+    Object.defineProperty(newState, 'crossingTurns', {value: -1});
     return newState;
   }
   return state;
-  */
 };
 
