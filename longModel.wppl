@@ -16,21 +16,21 @@ const carCrashReward = -100;
 const pedCrashReward = -1000;
 const maxCrossingTurns = 3;
 
+const carMoves = [-1, 0, 1];
+
 // regular car
-const regularCarMissPedProb = 0.3;
-const regularCarPriors = [0.33, 0.33, 0.33];
+const regularMissPedProb = 0.3;
+const regularPriors = [0.33, 0.33, 0.33];
 
 // driverless car
-const driverlessCarMissPedProb = 0.01;
-const driverlessPriors = [0.5, 0.4, 0];
+const driverlessMissPedProb = 0;
 
-const missPedProb = 0;
+// pedestrian noise
 const missCarProb = 0.3;
 const speedProbs = [0.2, 0.3, 0.35, 0.1, 0.05];
 
 const pedCrossPrior = 0.5;
-const carPriors = [0.33, 0.33, 0.33];
-const carMoves = [-1, 0, 1];
+const pedDriverlessProb = 1;
 
 const defaultDepth = 3;
 const actExecutions = 10;
@@ -53,11 +53,27 @@ var validCarMove = function(state, move) {
   return !(state.speed === 0 && move == -1);
 };
 
+var driverlessPrior = function(state) {
+  if (state.pedCrossTime === -1) {
+    if (state.speed > 0) {
+      return -1;
+    } else {
+      return 0;
+    }
+  } else {
+    return 1;
+  }
+};
+
 var carPrior = function(state){
   return Infer({ model() {
-    var move = sample(Categorical({ps: carPriors, vs: carMoves}));
-    condition(validCarMove(state, move));
-    return move;
+    if (state.isCarDriverless) {
+      return driverlessPrior(state);
+    } else {
+      var move = sample(Categorical({ps: regularPriors, vs: carMoves}));
+      condition(validCarMove(state, move));
+      return move;
+    }
   }});
 };
 
@@ -110,6 +126,9 @@ var guessCarState = function(state) {
   } else {
     Object.defineProperty(newState, 'speed', {value: 0});
   }
+  if (flip(pedDriverlessProb)) {
+    Object.defineProperty(newState, 'isCarDriverless', {value: true});
+  }
   return newState;
 };
 
@@ -117,9 +136,15 @@ var guessPedState = function(state) {
   /*
    * The rest of this is to add uncertainty to the car's guess of how long it will take the pedestrian to finish crossing. However adding it makes the program really slow.
    */
-  if (state.crossingTurns === maxCrossingTurns && flip(missPedProb)) {
+  if (state.crossingTurns === maxCrossingTurns) {
     var newState = _.clone(state);
-    Object.defineProperty(newState, 'crossingTurns', {value: -1});
+    if((state.isCarDriverless)) {
+      if(flip(driverlessMissPedProb)) {
+        Object.defineProperty(newState, 'crossingTurns', {value: -1});
+      }
+    } else if (flip(regularMissPedProb)) {
+      Object.defineProperty(newState, 'crossingTurns', {value: -1});
+    }
     return newState;
   }
   return state;
