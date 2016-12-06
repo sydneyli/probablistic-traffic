@@ -32,6 +32,11 @@
                 background-size: 100%;
             }
 
+            .bogac.crashed {
+                background: url("crash.png") no-repeat center bottom;
+                background-size: 100%;
+            }
+
             .bg {
                 position: relative;
                 margin:50px;
@@ -106,9 +111,12 @@
             var carOffset =  -Math.min.apply(Math, carData) + Yoffset;
             var pedWidth =  Math.max.apply(Math, pedData);
             var crossed = false;
-            var speedData = [];
+            var speedData = []; var crashed = -1;
             for (var i = 0; i < times.length; i++) {
                 var t = times[i];
+                crashed = crashed == -1 ? states[i].crashedTime : crashed;
+                console.log(states[i].crashedTime);
+                speedData.push(states[i].speed);
                 carLocs[t] = [Xoffset+Math.floor(pedWidth/2),carData[i] + carOffset];
                 if (pedData[i] == -1) {
                     pedLocs[t] = crossed ? [Xoffset, carOffset] : [Xoffset+pedWidth+1, carOffset ];
@@ -116,14 +124,13 @@
                     crossed = true;
                     pedLocs[t] = [Xoffset+pedData[i], carOffset];
                 }
-                speedData.push(states[i].speed);
             }
+            console.log(crashed);
             agents = [{name:"car", locs:carLocs}, {name:"bogac", locs:pedLocs}]
             var info = {speed: speedData};
-            var g = new GridAnimation(el, agents, [Xoffset+1, Xoffset + 1 + pedWidth], info);
+            var g = new GridAnimation(el, agents, [Xoffset+1, Xoffset + 1 + pedWidth], info, crashed);
             g.animate(function () { $("button#play").css('display','block'); });
         }
-
         var wait = function () {
             setTimeout(function () {
                 try {

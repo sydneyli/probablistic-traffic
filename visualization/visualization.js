@@ -1,6 +1,7 @@
 class GridAnimation {
     // width, height: size of grid
-    constructor(el, agents, roadX, info) {
+    constructor(el, agents, roadX, info, crashedTime) {
+        this.crashedTime = crashedTime;
         this.canvas = el;
         this.width = 0;
         this.height = 0;
@@ -51,6 +52,12 @@ class GridAnimation {
                 $("." + key).text(""+x.info[key][i]);
                 console.log(""+x.info[key][i]);
             }, this.timestep * i);
+        }
+        if (this.crashedTime >= 0) {
+            console.log("CRASH!!!");
+            setTimeout(function() {
+                $(".bogac").addClass("crashed");
+            }, this.timestep * this.crashedTime);
         }
         for (var a = 0; a < x.agents.length; a++) {
             var $agent = $(".a" + a);
