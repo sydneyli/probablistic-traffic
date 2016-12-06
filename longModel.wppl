@@ -32,7 +32,8 @@ const speedProbs = [0.2, 0.3, 0.35, 0.1, 0.05];
 const pedCrossPrior = 0.5;
 const pedDriverlessProb = 1;
 
-const defaultDepth = 3;
+const iMentalDepth = 3;
+const iFutureDepth = 4;
 const actExecutions = 10;
 const simulateExecutions = 4;
 
@@ -77,25 +78,24 @@ var carPrior = function(state){
   }});
 };
 
-var transition = function(state, move, player) {
+var transition = function(state, moves) {
   var newState = _.clone(state);
-  if (player == "car") {
-    Object.defineProperty(newState, 'carLocation', {value: state.carLocation - state.speed});
-    Object.defineProperty(newState, 'speed', {value: state.speed + move});
-    Object.defineProperty(newState, 'carCrossTime', {value: (newState.carLocation <= 0 && state.carCrossTime == -1) ? state.time + 1 : state.carCrossTime});
-    Object.defineProperty(newState, 'time', {value: state.time + 1});
-    if(newState.carCrossTime === newState.time && (state.crossingTurns > -1)) {
+  Object.defineProperty(newState, 'time', {value: state.time + 1});
+  Object.defineProperty(newState, 'carLocation', {value: state.carLocation - state.speed});
+  Object.defineProperty(newState, 'speed', {value: state.speed + moves.car});
+  if (newState.carLocation <= 0 && state.carCrossTime == -1) {
+    Object.defineProperty(newState, 'carCrossTime', {value: newState.time});
+    if(state.crossingTurns > -1) {
       Object.defineProperty(newState, 'crashedTime', {value: newState.time});
     }
-  } else {
-    if (move === "cross") {
-      Object.defineProperty(newState, 'crossingTurns', {value: maxCrossingTurns});
-    } else if (state.crossingTurns > 1) {
-      Object.defineProperty(newState, 'crossingTurns', {value: state.crossingTurns - 1});
-    } else if (state.crossingTurns === 1) {
-      Object.defineProperty(newState, 'crossingTurns', {value: -1});
-      Object.defineProperty(newState, 'pedCrossTime', {value: state.time});
-    }
+  }
+  if (moves.ped === "cross") {
+    Object.defineProperty(newState, 'crossingTurns', {value: maxCrossingTurns});
+  } else if (state.crossingTurns > 1) {
+    Object.defineProperty(newState, 'crossingTurns', {value: state.crossingTurns - 1});
+  } else if (state.crossingTurns === 1) {
+    Object.defineProperty(newState, 'crossingTurns', {value: -1});
+    Object.defineProperty(newState, 'pedCrossTime', {value: newState.time});
   }
   return newState;
 };
@@ -135,7 +135,8 @@ var guessCarState = function(state) {
 var guessPedState = function(state) {
   /*
    * The rest of this is to add uncertainty to the car's guess of how long it will take the pedestrian to finish crossing. However adding it makes the program really slow.
-   */
+  /
+  */
   if (state.crossingTurns === maxCrossingTurns) {
     var newState = _.clone(state);
     if((state.isCarDriverless)) {
