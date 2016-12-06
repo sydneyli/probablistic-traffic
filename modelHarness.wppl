@@ -38,20 +38,20 @@ var guessState = function(state, player) {
   }
 };
 
-var act = function(state, player, depth) {
+var act = function(state, player, depth, addNoise) {
   return Infer({method: "enumerate", maxExecutions: actExecutions, model() {
     var move = sample(movePrior(state, player));
     var eu = expectation(Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
-      var outcome = getNewOutcome(state, move, player, depth);
+      var outcome = getNewOutcome(state, move, player, depth, addNoise);
       return utility(outcome, player);
     }}));
-    factor(eu);
+    factor(1000*eu);
     return move;
   }});
 };
 
-var getNewOutcome = function(state, move, player, depth) {
-  var newState = guessState(state, player);
+var getNewOutcome = function(state, move, player, depth, addNoise) {
+  var newState = addNoise ? guessState(state, player) : state;
   var outcome = mentalSimulate(newState, move, player, depth - 1);
   return outcome;
 };
@@ -63,7 +63,7 @@ var mentalSimulate = function(state, move, player, depth) {
     return nextState;
   } else {
     var nextPlayer = otherPlayer(player);
-    var nextAction = sample(act(nextState, nextPlayer, depth));
+    var nextAction = sample(act(nextState, nextPlayer, depth, false));
     return mentalSimulate(nextState, nextAction, nextPlayer, depth);
   }
 };
@@ -71,7 +71,7 @@ var mentalSimulate = function(state, move, player, depth) {
 var realSimulate = function(state, player, states) {
   states.push(state);
   if (!isTerminal(state)) {
-    var move = sample(act(state, player, defaultDepth));
+    var move = sample(act(state, player, defaultDepth, true));
     var newState = transition(state, move, player);
     var newPlayer = otherPlayer(player);
     realSimulate(newState, newPlayer, states);

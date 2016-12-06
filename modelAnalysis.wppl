@@ -31,24 +31,24 @@ var printState = function(state) {
 
 var getActionDistribution = function(state, player) {
   print("Action Distribution for " + player + ":");
-  viz(act(state, player, defaultDepth));
+  viz(act(state, player, defaultDepth, true));
 };
 
 var getOutcomeDistribution = function(state, player, move) {
   var crashOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
-    var outcome = getNewOutcome(state, move, player, defaultDepth);
+    var outcome = getNewOutcome(state, move, player, defaultDepth, true);
     return outcome.crashedTime;
   }});
   var utilityOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
-    var outcome = getNewOutcome(state, move, player, defaultDepth);
+    var outcome = getNewOutcome(state, move, player, defaultDepth, true);
     return utility(outcome, player);
   }});
   var carCrossOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
-    var outcome = getNewOutcome(state, move, player, defaultDepth);
+    var outcome = getNewOutcome(state, move, player, defaultDepth, true);
     return outcome.carCrossTime;
   }});
   var pedCrossOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
-    var outcome = getNewOutcome(state, move, player, defaultDepth);
+    var outcome = getNewOutcome(state, move, player, defaultDepth, true);
     return outcome.pedCrossTime;
   }});
   print("Outcome Distribution for " + player + " doing " + move + ":");

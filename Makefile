@@ -1,4 +1,4 @@
-all: standard
+all: long
 long: long_build model
 standard: standard_build model
 long_build:
