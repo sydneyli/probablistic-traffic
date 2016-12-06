@@ -4,5 +4,5 @@ var pedWaitState = makeState(6, 3); // The car is close enough that it will deci
 //analyzeState(pedWaitState);
 //analyzeState(carStopState);
 
-simulateFromState(carStopState, "car");
-simulateFromState(carStopState, "ped");
+wpEditor.put(["car"], simulateFromState(carStopState, "car"));
+wpEditor.put(["ped"], simulateFromState(carStopState, "ped"));

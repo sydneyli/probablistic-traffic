@@ -90,4 +90,5 @@ var simulateFromState = function(state, player) {
   realSimulate(state, player, states);
   print("If " + player + " starts first:");
   printAllStates(states, 0);
+  return states
 };

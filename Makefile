@@ -1,10 +1,7 @@
-all: standard
+all: long
 long: long_build model
-standard: standard_build model
 long_build:
 	cp longModel.wppl compiled.wppl
-standard_build:
-	cp traffic.wppl compiled.wppl
 model:
 	cat modelHarness.wppl >> compiled.wppl
 	cat modelAnalysis.wppl >> compiled.wppl

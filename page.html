@@ -10,27 +10,139 @@
         <script src="http://cdn.webppl.org/webppl-viz-818a17e.js"></script>
         <link rel="stylesheet" href="http://cdn.webppl.org/webppl-viz-0.7.10.css">
 
+        <script src="visualization/visualization.js"></script>
+        <style>
+            .result, .reactCodeMirror { display: none; }
+            .obj {
+                position: absolute;
+                height: 30px;
+                width: 30px;
+                background-color: red;
+            }
+            .car {
+                background: url("beetle.gif") no-repeat;
+                background-size: 100%;
+                height: 90px;
+                width: 90px;
+            }
+            .bogac {
+                background: url("bogac.png") no-repeat center bottom;
+                margin-top:-30px;
+                height:60px;
+                background-size: 100%;
+            }
+
+            .bg {
+                position: relative;
+                margin:50px;
+            }
+            body {
+                margin: 0;
+            }
+
+            button#play {
+            }
+        </style>
+
     </head>
-    <button class="showCode"> edit code! </button>
-    <button class="hideCode"> hide code! </button>
+    <div class=bg>
+        <canvas id="graph"></canvas>
+    </div>
+    <br />
+    <b> Car speed: </b> <span class="speed">N/A</span>
+    <b>Options!</b>
+    <form action="">
+        Speed probabilities: <input type="text" class="speedProbs" value="0.3 0.4 0.3"> <br />
+        Car crash reward: <input type="text" class="carCrashReward" value="-100"> <br />
+        Pedestrian crash reward: <input type="text" class="pedCrashReward" value="-1000"> <br />
+        Pedestrian cross reward: <input type="text" class="pedCrossReward" value="50"> <br />
+        Car cross reward: <input type="text" class="carCrossReward" value="50"> <br />
+    </form>
     <pre><code>
         CODEHERE 
     </code></pre>
+    <button id="play">animate again!</button>
     <script>
         var preEls = $("pre").map(function(i, el) { wpEditor.setup(el, {language: 'webppl'}); });          
+        $("button#play").click(function() {
+            animate();
+        });
+
+        var extend = function(states, number) {
+            var newStates = states.slice(0);
+            var lastState = states[states.length - 1];
+            for (var i = 1; i <= number; i++) {
+                var newState = {
+                    carLocation: lastState.carLocation - lastState.speed,
+                    speed: lastState.speed + 1,
+                    time: lastState.time + 1,
+                    carCrossTime: -1,
+                    pedCrossTime: -1,
+                    crashedTime: -1,
+                    crossingTurns: -1
+                }
+                lastState = newState;
+                newStates.push(newState);
+            }
+            return newStates;
+        }
+
+        var animate = function () {
+            $("button#play").css('display','none');
+            var Xoffset = 3;
+            var Yoffset = 0;
+            var states = extend(wpEditor.get("car"), 1);
+            var el = document.getElementById("graph");
+            var carData = []; var pedData = [];
+            var carLocs = []; var pedLocs = [];
+            var times = []
+            for (var c = 0; c < states.length; c++) { times.push(states[c].time); }
+            var maxTime = Math.max.apply(Math, times);
+            for (var c = 0; c < states.length; c++) {
+                state = states[c];
+                carData.push(state.carLocation);
+                pedData.push(state.crossingTurns);
+            }
+            var carOffset =  -Math.min.apply(Math, carData) + Yoffset;
+            var pedWidth =  Math.max.apply(Math, pedData);
+            var crossed = false;
+            var speedData = [];
+            for (var i = 0; i < times.length; i++) {
+                var t = times[i];
+                carLocs[t] = [Xoffset+Math.floor(pedWidth/2),carData[i] + carOffset];
+                if (pedData[i] == -1) {
+                    pedLocs[t] = crossed ? [Xoffset, carOffset] : [Xoffset+pedWidth+1, carOffset ];
+                } else {
+                    crossed = true;
+                    pedLocs[t] = [Xoffset+pedData[i], carOffset];
+                }
+                speedData.push(states[i].speed);
+            }
+            agents = [{name:"car", locs:carLocs}, {name:"bogac", locs:pedLocs}]
+            var info = {speed: speedData};
+            var g = new GridAnimation(el, agents, [Xoffset+1, Xoffset + 1 + pedWidth], info);
+            g.animate(function () { $("button#play").css('display','block'); });
+        }
+
+        var wait = function () {
+            setTimeout(function () {
+                try {
+                    wpEditor.get(["ped"]);
+                } catch (err) {
+                    wait();
+                    return;
+                }
+                animate();
+            }, 200);
+        }
         setTimeout(function () {
-                $(".ReactCodeMirror").css('display', 'none');
-                $('.run').click();}
-            , 100);
-            $(".hideCode").css('display', 'none');
-            $(".showCode").click(function () {
-                $(".ReactCodeMirror").css('display', 'block');
-                $(".hideCode").css('display', 'block');
-                $(".showCode").css('display', 'none'); })
-            $(".hideCode").click(function () {
-                $(".ReactCodeMirror").css('display', 'none');
-                $(".showCode").css('display', 'block');
-                $(".hideCode").css('display', 'none'); })
+            $(".ReactCodeMirror").css('display', 'none');
+            $('.run').click(function () { 
+                wait();
+            });
+            $('.run').click();
+        }
+        , 100);
     </script>
     <script src="webppl.min.js" defer></script>
 </html>
