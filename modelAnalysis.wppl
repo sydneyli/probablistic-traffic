@@ -57,4 +57,5 @@ var simulateFromState = function(state) {
   var states = [];
   realSimulate(state, states);
   printAllStates(states, 0);
+  return states
 };

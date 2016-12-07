@@ -8,7 +8,6 @@ var dummyState2 = makeState(6, 3, false);
 console.log("Unit test 2: Pedestrian should always wait and car should never slow down");
 analyzeState(dummyState2);
 
-
 var ambigState1 = makeState(7, 3, false);
 console.log("Ambiguous state: Either car speeds up and ped waits or ped crosses and car slows down.");
 console.log("Always crash no matter what");
