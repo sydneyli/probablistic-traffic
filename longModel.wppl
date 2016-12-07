@@ -37,6 +37,16 @@ const iFutureDepth = 7;
 const actExecutions = 10;
 const simulateExecutions = 4;
 
+var carCrash = function(state){
+  return -100;
+  //return -(Math.pow(10,(state.speed-1)));
+};
+
+var pedCrash = function(state) {
+  return -1000;
+  //return -(Math.pow(10,(state.speed)));
+};
+
 var pedPrior = function(state){
   return Infer({ model() {
     if (state.pedCrossTime != -1 || state.crashed || state.crossingTurns > -1) {

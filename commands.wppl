@@ -38,29 +38,3 @@ simulateFromState(ambigState3);
 
 var someStateFalse = makeState(10, 4, false);
 var someStateTrue = makeState(10, 4, true);
-var halfStateFalse = makeState(5, 2, false);
-var frame2 = makeState(3, 3, false);
-/*
-viz(Infer({model() {
-  var move = sample(actMine(someStateFalse, "ped", 3, 5, true));
-  return move;
-}}));
-*/
-Object.defineProperty(frame2, 'crossingTurns', {value: maxCrossingTurns});
-printState(frame2);
-/*
-viz(Infer({model() {
-  var move = sample(actMine(frame2, "car", 3, 7, true));
-  return move;
-}}));
-
-viz(Infer({model() {
-  var utility = postActMine(frame2, "car", 0, 3, 7, true);
-  return utility;
-}}));
-
-viz(Infer({model() {
-  var utility = postActMine(frame2, "car", -1, 3, 7, true);
-  return utility;
-}}));
-*/

@@ -12,7 +12,7 @@ var movePrior =  function(state, player) {
 var utility = function(state, player) {
   if (player == "car") {
     if (crashed(state)) {
-      return -(Math.pow(10,(state.speed-1)));
+      return  carCrash(state);
     } else if (state.carCrossTime != -1) {
       return carReward(state);
     } else {
@@ -20,7 +20,7 @@ var utility = function(state, player) {
     }
   } else {
     if (crashed(state)) {
-      return -(Math.pow(10,(state.speed)));
+      pedCrash(state);
     } else if (state.pedCrossTime != -1) {
       return pedReward(state);
     } else {
