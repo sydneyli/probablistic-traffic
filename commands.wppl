@@ -1,17 +1,37 @@
-var carStopState = makeState(8, 3); // The car is far enough that ped starts to cross, car thus has to slow down, however if the pedestrian has uncertainty about the speed of the car, then they wait instead
-var pedWaitDriverlessState = makeState(7, 3, true); // The car is close enough that it will decide to speed up and the pedestrian will wait for the car
-var pedWaitRegularState = makeState(11, 4, false); // The car is close enough that it will decide to speed up and the pedestrian will wait for the car
 
-//analyzeState(pedWaitRegularState);
-//analyzeState(pedWaitDriverlessState);
+var dummyState = makeState(-1, 1, false);
+Object.defineProperty(dummyState, "carCrossTime", {value:-2});
+console.log("Unit test 1: Pedestrian should always cross and car should act random");
+analyzeState(dummyState);
 
-//simulateFromState(pedWaitDriverlessState, "ped");
-//simulateFromState(pedWaitDriverlessState, "car");
-simulateFromState(pedWaitRegularState);
+var dummyState2 = makeState(6, 3, false);
+console.log("Unit test 2: Pedestrian should always wait and car should never slow down");
+analyzeState(dummyState2);
 
-//simulateFromState(pedWaitState, "ped");
-//simulateFromState(pedWaitState, "car");
-//analyzeState(carStopState);
 
-//simulateFromState(carStopState, "car");
-//simulateFromState(carStopState, "ped");
+var ambigState1 = makeState(7, 3, false);
+console.log("Ambiguous state: Either car speeds up and ped waits or ped crosses and car slows down.");
+console.log("Always crash no matter what");
+
+analyzeState(ambigState1);
+simulateFromState(ambigState1);
+
+console.log("Same ambiguous state when the car is driverless");
+var ambigState2 = makeState(7, 3, true);
+simulateFromState(ambigState2);
+
+var ambigState3 = makeState(8, 4, false);
+console.log("In this state with no misinformation, ped waits for car.");
+console.log("If ped's prob of not seeing car is >0.4 ped crosses and crash happens");
+
+viz(Infer({model() {
+  var moves = sample(actBoth(ambigState3, "ped", iMentalDepth, iFutureDepth, true));
+  return moves.car;
+}}));
+
+viz(Infer({model() {
+  var moves = sample(actBoth(ambigState3, "car", iMentalDepth, iFutureDepth, true));
+  return moves.ped;
+}}));
+analyzeState(ambigState3);
+simulateFromState(ambigState3);
