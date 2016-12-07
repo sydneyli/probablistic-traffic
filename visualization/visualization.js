@@ -27,7 +27,6 @@ class GridAnimation {
         $(".obj").remove();
         for (var a = 0; a < agents.length; a++) {
             var agent = agents[a];
-            console.log(agent);
             $(".bg").prepend("<div class='obj a"+a+" "+agent.name+"'></div>");
             $(".a"+a).css('top', (this.tilesize * agent.locs[0][1]) + "px");
             $(".a"+a).css('left', (this.tilesize * agent.locs[0][0]) + "px");
@@ -50,13 +49,15 @@ class GridAnimation {
             var key = Object.keys(this.info)[k];
             setTimeout( function() {
                 $("." + key).text(""+x.info[key][i]);
-                console.log(""+x.info[key][i]);
             }, this.timestep * i);
         }
         if (this.crashedTime >= 0) {
-            console.log("CRASH!!!");
             setTimeout(function() {
                 $(".bogac").addClass("crashed");
+                for (var a = 0; a < x.agents.length; a++) {
+                    var $agent = $(".a" + a);
+                    $agent.clearQueue();
+                }
             }, this.timestep * this.crashedTime);
         }
         for (var a = 0; a < x.agents.length; a++) {

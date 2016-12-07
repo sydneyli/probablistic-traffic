@@ -96,7 +96,7 @@
             $("button#play").css('display','none');
             var Xoffset = 3;
             var Yoffset = 0;
-            var states = extend(wpEditor.get("car"), 1);
+            var states = extend(wpEditor.get("ped"), 1);
             var el = document.getElementById("graph");
             var carData = []; var pedData = [];
             var carLocs = []; var pedLocs = [];
@@ -115,7 +115,6 @@
             for (var i = 0; i < times.length; i++) {
                 var t = times[i];
                 crashed = crashed == -1 ? states[i].crashedTime : crashed;
-                console.log(states[i].crashedTime);
                 speedData.push(states[i].speed);
                 carLocs[t] = [Xoffset+Math.floor(pedWidth/2),carData[i] + carOffset];
                 if (pedData[i] == -1) {
@@ -125,7 +124,6 @@
                     pedLocs[t] = [Xoffset+pedData[i], carOffset];
                 }
             }
-            console.log(crashed);
             agents = [{name:"car", locs:carLocs}, {name:"bogac", locs:pedLocs}]
             var info = {speed: speedData};
             var g = new GridAnimation(el, agents, [Xoffset+1, Xoffset + 1 + pedWidth], info, crashed);

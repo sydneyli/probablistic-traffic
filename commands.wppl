@@ -11,7 +11,6 @@ wpEditor.put("ped", simulateFromState(pedWaitRegularState));
 
 //simulateFromState(pedWaitState, "ped");
 //simulateFromState(pedWaitState, "car");
->>>>>>> f1612856324c8f8d4ab62b848e39771ab5fc30eb
 //analyzeState(carStopState);
 
 //simulateFromState(carStopState, "car");
