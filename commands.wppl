@@ -1,4 +1,4 @@
-
+/*
 var dummyState = makeState(-1, 1, false);
 Object.defineProperty(dummyState, "carCrossTime", {value:-2});
 console.log("Unit test 1: Pedestrian should always cross and car should act random");
@@ -34,3 +34,8 @@ viz(Infer({model() {
 }}));
 analyzeState(ambigState3);
 simulateFromState(ambigState3);
+*/
+
+var someState = makeState(7, 3, false);
+analyzeState(someState);
+wpEditor.put("ped",simulateFromState(someState));

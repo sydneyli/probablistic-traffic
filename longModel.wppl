@@ -20,7 +20,7 @@ const carMoves = [-1, 0, 1];
 
 // regular car
 const regularMissPedProb = 0;
-const regularPriors = [0.33, 0.33, 0.33];
+const regularPriors = [0.1, 0, 0.9];
 
 // driverless car
 const driverlessMissPedProb = 0;
@@ -30,11 +30,11 @@ const missCarProb = 0;
 const speedProbs = [0.05, 0.9, 0.05];
 
 const pedCrossPrior = 0.5;
-const pedDriverlessProb = 0.8;
+const pedDriverlessProb = 0;
 
-const iMentalDepth = 3;
-const iFutureDepth = 4;
-const actExecutions = 10;
+const iMentalDepth = 2;
+const iFutureDepth = 3;
+const actExecutions = 6;
 const simulateExecutions = 4;
 
 var pedPrior = function(state){
