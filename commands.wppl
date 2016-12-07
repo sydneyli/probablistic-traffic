@@ -7,7 +7,11 @@ var pedWaitRegularState = makeState(11, 4, false); // The car is close enough th
 
 //simulateFromState(pedWaitDriverlessState, "ped");
 //simulateFromState(pedWaitDriverlessState, "car");
-wpEditor.put("ped", simulateFromState(pedWaitRegularState));
+var initialLocation = wpEditor.get("initialLocation");
+var initialSpeed = wpEditor.get("initialSpeed");
+var driverlessCar = wpEditor.get("driverlessCar");
+var state = makeState(initialLocation, initialSpeed, driverlessCar);
+wpEditor.put("ped", simulateFromState(state));
 
 //simulateFromState(pedWaitState, "ped");
 //simulateFromState(pedWaitState, "car");

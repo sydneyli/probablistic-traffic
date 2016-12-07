@@ -51,15 +51,6 @@ class GridAnimation {
                 $("." + key).text(""+x.info[key][i]);
             }, this.timestep * i);
         }
-        if (this.crashedTime >= 0) {
-            setTimeout(function() {
-                $(".bogac").addClass("crashed");
-                for (var a = 0; a < x.agents.length; a++) {
-                    var $agent = $(".a" + a);
-                    $agent.clearQueue();
-                }
-            }, this.timestep * this.crashedTime);
-        }
         for (var a = 0; a < x.agents.length; a++) {
             var $agent = $(".a" + a);
             $agent.animate({
@@ -74,6 +65,16 @@ class GridAnimation {
 
     animate(done) {
          var x = this;
+        if (this.crashedTime >= 0) {
+            setTimeout(function() {
+                $(".car").prepend("<div class='crashed'></div>");
+                for (var a = 0; a < x.agents.length; a++) {
+                    var $agent = $(".a" + a);
+                    $agent.clearQueue();
+                }
+            }, this.timestep * this.crashedTime);
+        }
+
          for (var t = 1; t < this.maxtime; t++) {
              this.animateStep(t);
          }
