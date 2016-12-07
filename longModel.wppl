@@ -19,18 +19,18 @@ const maxCrossingTurns = 3;
 const carMoves = [-1, 0, 1];
 
 // regular car
-const regularMissPedProb = 0.3;
+const regularMissPedProb = 0;
 const regularPriors = [0.33, 0.33, 0.33];
 
 // driverless car
 const driverlessMissPedProb = 0;
 
 // pedestrian noise
-const missCarProb = 0.3;
-const speedProbs = [0.2, 0.3, 0.35, 0.1, 0.05];
+const missCarProb = 0;
+const speedProbs = [0.05, 0.9, 0.05];
 
 const pedCrossPrior = 0.5;
-const pedDriverlessProb = 1;
+const pedDriverlessProb = 0.8;
 
 const iMentalDepth = 3;
 const iFutureDepth = 4;
@@ -124,7 +124,8 @@ var guessCarState = function(state) {
     var newSpeed = sample(Categorical({ps: speedProbs, vs: uncertainty}));
     Object.defineProperty(newState, 'speed', {value: newSpeed < 0 ? 0 : newSpeed});
   } else {
-    Object.defineProperty(newState, 'speed', {value: 0});
+    Object.defineProperty(newState, 'location', {value: -1});
+    Object.defineProperty(newState, 'carCrossTime', {value: -2});
   }
   if (flip(pedDriverlessProb)) {
     Object.defineProperty(newState, 'isCarDriverless', {value: true});
@@ -137,14 +138,14 @@ var guessPedState = function(state) {
    * The rest of this is to add uncertainty to the car's guess of how long it will take the pedestrian to finish crossing. However adding it makes the program really slow.
   /
   */
-  if (state.crossingTurns === maxCrossingTurns) {
+  if (state.crossingTurns === -1 && state.pedCrossTime === -1) {
     var newState = _.clone(state);
     if((state.isCarDriverless)) {
       if(flip(driverlessMissPedProb)) {
-        Object.defineProperty(newState, 'crossingTurns', {value: -1});
+        Object.defineProperty(newState, 'pedCrossTime', {value: -2});
       }
     } else if (flip(regularMissPedProb)) {
-      Object.defineProperty(newState, 'crossingTurns', {value: -1});
+      Object.defineProperty(newState, 'pedCrossTime', {value: -2});
     }
     return newState;
   }

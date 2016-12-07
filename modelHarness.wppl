@@ -17,7 +17,7 @@ var utility = function(state, player) {
     } else if (state.carCrossTime != -1) {
       return carReward(state);
     } else {
-      return 0;
+      return -carTimeCost*state.time;
     }
   } else {
     if (crashed(state)) {
@@ -25,7 +25,7 @@ var utility = function(state, player) {
     } else if (state.pedCrossTime != -1) {
       return pedReward(state);
     } else {
-      return 0;
+      return -pedTimeCost*state.time;
     }
   }
 };
@@ -57,7 +57,11 @@ var actMine = function(state, player, mentalDepth, futureDepth, addNoise) {
         var outcome = mentalSimulate(state, moves, player, mentalDepth, futureDepth-1);
         return utility(outcome, player);
       }}));
-      factor(1000*eu);
+      if(addNoise) {
+        factor(1000*eu);
+      } else {
+        factor(eu);
+      }
       return player === "car" ? moves.car : moves.ped;
     }
   }});
