@@ -36,6 +36,12 @@ analyzeState(ambigState3);
 simulateFromState(ambigState3);
 */
 
-var someState = makeState(7, 3, false);
-analyzeState(someState);
-wpEditor.put("ped",simulateFromState(someState));
+var someStateFalse = makeState(7, 3, false);
+var someStateTrue = makeState(7, 3, true);
+
+viz(Infer({model() {
+  var move = sample(actMine(someStateFalse, "ped", 3, 5, true));
+  return move;
+}}));
+
+wpEditor.put("ped",simulateFromState(someStateFalse));

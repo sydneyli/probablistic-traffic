@@ -12,7 +12,7 @@ var movePrior =  function(state, player) {
 var utility = function(state, player) {
   if (player == "car") {
     if (crashed(state)) {
-      return carCrashReward*(10^state.speed);
+      return -(10^(state.speed-1));
     } else if (state.carCrossTime != -1) {
       return carReward(state);
     } else {
@@ -20,7 +20,7 @@ var utility = function(state, player) {
     }
   } else {
     if (crashed(state)) {
-      return pedCrashReward*(10^state.speed);
+      return -(10^(state.speed));
     } else if (state.pedCrossTime != -1) {
       return pedReward(state);
     } else {
@@ -37,23 +37,14 @@ var guessState = function(state, player) {
   }
 };
 
-var getMoves = function(state, player, mentalDepth, futureDepth) {
-    var move = sample(movePrior(state, player));
-    var other = otherPlayer(player);
-    var mentalDepthChange = flip(0.5) ? 1 : 2;
-    var othersMove = sample(actMine(state, other, mentalDepth-mentalDepthChange, futureDepth, false));
-    var moves = (player === "ped" ? {ped:move, car:othersMove} : {ped:othersMove, car:move});
-    return moves;
-};
-
 var postActMine = function(state, player, move, mentalDepth, futureDepth, addNoise) {
     var guessedState = addNoise ? guessState(state, player) : state;
     var other = otherPlayer(player);
     var mentalDepthChange = flip(0.5) ? 1 : 2;
-    var othersMove = sample(actMine(state, other, mentalDepth-mentalDepthChange, futureDepth, false));
+    var othersMove = sample(actMine(guessedState, other, mentalDepth-mentalDepthChange, futureDepth, false));
     var moves = (player === "ped" ? {ped:move, car:othersMove} : {ped:othersMove, car:move});
     var eu = expectation(Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
-      var outcome = mentalSimulate(state, moves, player, mentalDepth, futureDepth-1);
+      var outcome = mentalSimulate(guessedState, moves, player, mentalDepth, futureDepth-1);
       return utility(outcome, player);
     }}));
     return eu;
@@ -65,9 +56,7 @@ var actMine = function(state, player, mentalDepth, futureDepth, addNoise) {
       return sample(movePrior(state, player));
     } else {
       var move = sample(movePrior(state, player));
-      var moveEu = expectation(Infer({method: "enumerate", maxExecutions: 5, model() {
-        return postActMine(state, player, move, mentalDepth, futureDepth, addNoise);
-      }}));
+      var moveEu = postActMine(state, player, move, mentalDepth, futureDepth, addNoise);
       factor(moveEu);
       return move;
     }
