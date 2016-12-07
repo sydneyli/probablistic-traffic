@@ -33,7 +33,7 @@ const pedCrossPrior = 0.5;
 const pedDriverlessProb = 1;
 
 const iMentalDepth = 3;
-const iFutureDepth = 5;
+const iFutureDepth = 7;
 const actExecutions = 10;
 const simulateExecutions = 4;
 
@@ -83,7 +83,7 @@ var transition = function(state, moves) {
   Object.defineProperty(newState, 'time', {value: state.time + 1});
   Object.defineProperty(newState, 'carLocation', {value: state.carLocation - state.speed});
   Object.defineProperty(newState, 'speed', {value: state.speed + moves.car});
-  if (newState.carLocation <= 0 && state.carCrossTime == -1) {
+  if (newState.carLocation <= 0 && state.carCrossTime === -1) {
     Object.defineProperty(newState, 'carCrossTime', {value: newState.time});
     if(state.crossingTurns > -1) {
       Object.defineProperty(newState, 'crashedTime', {value: newState.time});
