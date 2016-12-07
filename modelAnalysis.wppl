@@ -1,4 +1,4 @@
-var makeState = function (carLocation, speed) {
+var makeState = function (carLocation, speed, driverless) {
   return {
     carLocation: carLocation,
     speed: speed,
@@ -7,6 +7,7 @@ var makeState = function (carLocation, speed) {
     pedCrossTime: -1,
     crashedTime: -1,
     crossingTurns: -1,
+    isCarDriverless: driverless,
   };
 };
 
@@ -31,45 +32,12 @@ var printState = function(state) {
 
 var getActionDistribution = function(state, player) {
   print("Action Distribution for " + player + ":");
-  viz(act(state, player, defaultDepth, true));
-};
-
-var getOutcomeDistribution = function(state, player, move) {
-  var crashOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
-    var outcome = getNewOutcome(state, move, player, defaultDepth, true);
-    return outcome.crashedTime;
-  }});
-  var utilityOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
-    var outcome = getNewOutcome(state, move, player, defaultDepth, true);
-    return utility(outcome, player);
-  }});
-  var carCrossOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
-    var outcome = getNewOutcome(state, move, player, defaultDepth, true);
-    return outcome.carCrossTime;
-  }});
-  var pedCrossOutcomes = Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
-    var outcome = getNewOutcome(state, move, player, defaultDepth, true);
-    return outcome.pedCrossTime;
-  }});
-  print("Outcome Distribution for " + player + " doing " + move + ":");
-  print("Crashed?");
-  viz(crashOutcomes);
-  print("Utility:");
-  viz(utilityOutcomes);
-  print("When car crossed:");
-  viz(carCrossOutcomes);
-  print("When pedestrian crossed:");
-  viz(pedCrossOutcomes);
+  viz(actMine(state, player, iMentalDepth, iFutureDepth, true));
 };
 
 var analyzeState = function(state) {
   getActionDistribution(state, "ped");
-  getOutcomeDistribution(state, "ped", "cross");
-  getOutcomeDistribution(state, "ped", "wait");
   getActionDistribution(state, "car");
-  getOutcomeDistribution(state, "car", -1);
-  getOutcomeDistribution(state, "car", 0);
-  getOutcomeDistribution(state, "car", 1);
 };
 
 /*
@@ -85,10 +53,9 @@ var printAllStates = function(states, idx) {
   }
 };
 
-var simulateFromState = function(state, player) {
+var simulateFromState = function(state) {
   var states = [];
-  realSimulate(state, player, states);
-  print("If " + player + " starts first:");
+  realSimulate(state, states);
   printAllStates(states, 0);
   return states
 };

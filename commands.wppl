@@ -1,10 +1,17 @@
 var carStopState = makeState(8, 3); // The car is far enough that ped starts to cross, car thus has to slow down, however if the pedestrian has uncertainty about the speed of the car, then they wait instead
-var pedWaitState = makeState(8, 4); // The car is close enough that it will decide to speed up and the pedestrian will wait for the car
+var pedWaitDriverlessState = makeState(7, 3, true); // The car is close enough that it will decide to speed up and the pedestrian will wait for the car
+var pedWaitRegularState = makeState(11, 4, false); // The car is close enough that it will decide to speed up and the pedestrian will wait for the car
 
-analyzeState(pedWaitState);
+//analyzeState(pedWaitRegularState);
+//analyzeState(pedWaitDriverlessState);
 
-wpEditor.put(["car"], simulateFromState(pedWaitState, "car"));
-wpEditor.put(["ped"], simulateFromState(pedWaitState, "ped"));
+//simulateFromState(pedWaitDriverlessState, "ped");
+//simulateFromState(pedWaitDriverlessState, "car");
+wpEditor.put("ped", simulateFromState(pedWaitRegularState));
+
+//simulateFromState(pedWaitState, "ped");
+//simulateFromState(pedWaitState, "car");
+>>>>>>> f1612856324c8f8d4ab62b848e39771ab5fc30eb
 //analyzeState(carStopState);
 
 //simulateFromState(carStopState, "car");

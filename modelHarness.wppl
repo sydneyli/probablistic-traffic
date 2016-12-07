@@ -38,42 +38,65 @@ var guessState = function(state, player) {
   }
 };
 
-var act = function(state, player, depth, addNoise) {
-  return Infer({method: "enumerate", maxExecutions: actExecutions, model() {
+var getMoves = function(state, player, mentalDepth, futureDepth) {
     var move = sample(movePrior(state, player));
-    var eu = expectation(Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
-      var outcome = getNewOutcome(state, move, player, depth, addNoise);
-      return utility(outcome, player);
-    }}));
-    factor(1000*eu);
-    return move;
+    var other = otherPlayer(player);
+    var othersMove = sample(actMine(state, other, mentalDepth-1, futureDepth, false));
+    var moves = (player === "ped" ? {ped:move, car:othersMove} : {ped:othersMove, car:move});
+    return moves;
+};
+
+var actMine = function(state, player, mentalDepth, futureDepth, addNoise) {
+  return Infer({method: "enumerate", maxExecutions: actExecutions, model() {
+    if (mentalDepth === 0) {
+      return sample(movePrior(state, player));
+    } else {
+      var guessedState = addNoise ? guessState(state, player) : state;
+      var moves = getMoves(guessedState, player, mentalDepth, futureDepth);
+      var eu = expectation(Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
+        var outcome = mentalSimulate(state, moves, player, mentalDepth, futureDepth-1);
+        return utility(outcome, player);
+      }}));
+      factor(1000*eu);
+      return player === "car" ? moves.car : moves.ped;
+    }
   }});
 };
 
-var getNewOutcome = function(state, move, player, depth, addNoise) {
-  var newState = addNoise ? guessState(state, player) : state;
-  var outcome = mentalSimulate(newState, move, player, depth - 1);
-  return outcome;
+var actBoth = function(state, player, mentalDepth, futureDepth, addNoise) {
+  return Infer({method: "enumerate", maxExecutions: actExecutions, model() {
+    if (mentalDepth === 0) {
+      return sample(movePrior(state, player));
+    } else {
+      var guessedState = addNoise ? guessState(state, player) : state;
+      var moves = getMoves(guessedState, player, mentalDepth, futureDepth);
+      var eu = expectation(Infer({method: "enumerate", maxExecutions: simulateExecutions, model() {
+        var outcome = mentalSimulate(state, moves, player, mentalDepth, futureDepth-1);
+        return utility(outcome, player);
+      }}));
+      factor(1000*eu);
+      return moves;
+    }
+  }});
 };
 
-
-var mentalSimulate = function(state, move, player, depth) {
-  var nextState = transition(state, move, player);
-  if (isTerminal(nextState) || depth <= 0) {
+var mentalSimulate = function(state, moves, player, mentalDepth, futureDepth) {
+  var nextState = transition(state, moves);
+  if (isTerminal(nextState) || futureDepth === 0) {
     return nextState;
   } else {
-    var nextPlayer = otherPlayer(player);
-    var nextAction = sample(act(nextState, nextPlayer, depth, false));
-    return mentalSimulate(nextState, nextAction, nextPlayer, depth);
+    var newMoves = sample(actBoth(nextState, player, mentalDepth, futureDepth, false));
+    return mentalSimulate(nextState, newMoves, player, mentalDepth, futureDepth-1);
   }
 };
 
-var realSimulate = function(state, player, states) {
+var realSimulate = function(state, states) {
   states.push(state);
   if (!isTerminal(state)) {
-    var move = sample(act(state, player, defaultDepth, true));
-    var newState = transition(state, move, player);
-    var newPlayer = otherPlayer(player);
-    realSimulate(newState, newPlayer, states);
+    var pedMove = sample(actMine(state, "ped", iMentalDepth, iFutureDepth, true));
+    var carMove = sample(actMine(state, "car", iMentalDepth, iFutureDepth, true));
+    var moves = { ped: pedMove, car: carMove };
+    var newState = transition(state, moves);
+    realSimulate(newState, states);
   }
 };
